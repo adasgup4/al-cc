@@ -1,11 +1,17 @@
-//java.util is used for the data structures such as Hashtable, LikedHashSet, etc
-//java.io is used for file input etc
+//java.util is used for the data structures such as Hashtable, LikedHashSet, etc as well as Iterators, 
+//java.io is used for file input, bufferedreader etc
+
 import java.util.*;
 import java.io.*;
 
-//Apartment List coding Challenge
+//Apartment List Coding Challenge (ALCC)
+
 public class alcc
 {
+	// This line of code is used to calculate runtime
+
+	static long startTime = System.currentTimeMillis();
+
 	/*
 	 * Defining the variable that will hold the final value
 	 * Defining the seed word, in this case 'LISTY'
@@ -13,26 +19,27 @@ public class alcc
 	 * Defining the list that will store all words that are part of the social network
 	 */
 
-	static long startTime = System.currentTimeMillis();
-
 	static int socialnetwork = 0;
 	static String seed = "LISTY";
 	static Hashtable<Integer, LinkedHashSet<String>> data = new Hashtable<>();
 	static Queue<String> SocNet = new LinkedList<String>();
 
+	// Main function -> This is where we begin reading the file, and initiate the calculation of Edit Distance
+	// Once that function is done iterating, the result is printed out from this main function
+
 	public static void main(String[] args)
 	{
-		/*
-		 * Reading the data from the file into a data structure
-		 */
-		FileReader fileReader = null;
-		BufferedReader bufferedReader = null;
+		// Reading the data from the file into a data structure
+		
+		FileReader fr = null;
+		BufferedReader br = null;
 		try
 		{
-			File dictionary = new File("dictionary.txt");
-			fileReader = new FileReader(dictionary);
-			bufferedReader = new BufferedReader(fileReader);
+			File dict = new File("dictionary.txt");
+			fr = new FileReader(dict);
+			br = new BufferedReader(fr);
 		}
+		// This try catch block was needed to avoid a situation where the file could not be found.
 		catch(FileNotFoundException ex)
 		{
 			System.err.println("File Not Found: " + ex.getMessage());
@@ -40,17 +47,19 @@ public class alcc
 
 		/*
 		 * The data structure that is best for such a purpose would be one that is easy to search and delete from.
-		 * Most often that works with a Hash Table (or Hash Map in Java). This has been defined above.
+		 * Most often that works with a Hash Table (or Hash Map). This has been defined above.
 		 */
 		
 		LinkedHashSet<String> setw;
 		ArrayList<String> listw = new ArrayList<String>();;
 		String word;
+
 		// Parse through the contents of the file and store in the Hashtable.
 		// Also, while saving the words the first time, go through the first iteration of findingFriends for LISTY.
+		
 		try
 		{
-			while ((word = bufferedReader.readLine()) != null)
+			while ((word = br.readLine()) != null)
 			{
 				// Add the word into the word list
 				listw.add(word);
@@ -67,7 +76,7 @@ public class alcc
 					setw.add(word);
 					data.put(word.length(), setw);
 				}
-				// This is where we calculate the first round of findingFriends, only for those words that are +/- 1 letter in size compared to the seed word.
+				// This is where we calculate the first round of indingFriends, only for those words that are +/- 1 letter in size compared to the seed word.
 				if (Math.abs(word.length() - seed.length()) <= 1)
 				{
 					if (editDistance(word,seed) == 1)
@@ -76,17 +85,22 @@ public class alcc
 					}
 				}
 			}
-			runEditDistance();
+			//run the isFriend() function once all the initial words have been added into SocNet
+			runIsFriend();
 		}
+		// This try catch block was required to prevent the IOexceptions that might occur when reading the file
 		catch (IOException ex)
 		{
 			System.err.println("Error Reading File: " + ex.getMessage());
 		}
 
+		// This part of the code is used to calculate runtime
+		
 		long stopTime = System.currentTimeMillis();
 		long elapsedTime = stopTime - startTime;
 		System.out.println(elapsedTime);
 
+		// This line prints out the final size of the social network
 		System.out.println(socialnetwork);
 	}
 
@@ -95,8 +109,10 @@ public class alcc
 	 * This calls upon isFriend() which actually goes through adding, editing and deleting to find friends
 	 */
 
-	public static void runEditDistance()
+	public static void runIsFriend()
 	{
+		// We continue running this function while our SocNet queue has contents in it
+		// Since new friends are constnatly added here, this becomes our iterator and this function continues to run
 		while (!SocNet.isEmpty())
 		{
 			String nextfriend = SocNet.poll();
@@ -117,13 +133,19 @@ public class alcc
 		// removing yields length - 1,
 		// editing yields length
 		// adding yields length + 1
+
 		int removesize = nextfriend.length() - 1;
 		int editsize = nextfriend.length();
 		int addsize = nextfriend.length() + 1;
 
+		// These three linkedHashSets are used to store the set of values that are of the right size
+		
 		LinkedHashSet remove = data.get(removesize);
 		LinkedHashSet edit = data.get(editsize);
   		LinkedHashSet add = data.get(addsize);
+
+  		// An iterator is then set up to go through the linkedHashSets and identify friends
+  		// (for each of the three cases)
 
   		Iterator remiter = null;
 		if (remove != null)	remiter = remove.iterator();
@@ -178,7 +200,6 @@ public class alcc
   				}
   			}
   		}
-
 	}
 
 
@@ -235,6 +256,8 @@ public class alcc
 			{
 				if (a.charAt(counti-1) == b.charAt(countj-1)) cost = 0;
 				else cost = 1;
+
+				// This is where we take the minimum of the three parameters that make up the Levenshtein Distance formula
 
 				int smaller_neighbor = Math.min(matrix[counti-1][countj] + 1, matrix[counti][countj-1] + 1);
 				matrix[counti][countj] = Math.min(smaller_neighbor, matrix[counti-1][countj-1] + cost);
